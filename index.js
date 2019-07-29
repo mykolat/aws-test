@@ -9,7 +9,7 @@ const s3 = new AWS.S3({
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
-async function listAllObjectsFromS3Bucket(bucket, filter) {
+async function listAllObjectsFromS3Bucket(bucket, filter, silence) {
     let isTruncated = true;
     let marker;
     let list = [];
@@ -20,10 +20,12 @@ async function listAllObjectsFromS3Bucket(bucket, filter) {
             const response = await s3.listObjects(params).promise();
             response.Contents.forEach(item => {
                 if (!filter) {
-                    console.log(item.Key);
+                    if (!silence)
+                        console.log(item.Key);
                     list.push(item);
-                } else if(_.get(item, 'Key','').match(regex)){
-                    console.log(item.Key);
+                } else if (_.get(item, 'Key', '').match(regex)) {
+                    if (!silence)
+                        console.log(item.Key);
                     list.push(item)
                 }
             });
@@ -39,7 +41,7 @@ async function listAllObjectsFromS3Bucket(bucket, filter) {
 }
 
 async function clearBucket(bucket, filter) {
-    let items = await listAllObjectsFromS3Bucket(bucket, filter)
+    let items = await listAllObjectsFromS3Bucket(bucket, filter, true)
 
     for (let i = 0; i < items.length; i += 1) {
         let deleteParams = {Bucket: bucket, Key: items[i].Key};
